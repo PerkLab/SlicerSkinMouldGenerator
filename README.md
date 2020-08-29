@@ -6,6 +6,8 @@ The module receives a CT scan of the treatment area as well as the optimized cat
 
 Publication: [Mark Schumacher, Andras Lasso, Ian Cumming, Adam Rankin, Conrad B. Falkson, John Schreiner, Chandra Joshi, Gabor Fichtinger, "3D-printed surface mould applicator for high-dose-rate brachytherapy", 9415, SPIE Medical Imaging 2015](http://perk.cs.queensu.ca/contents/3d-printed-surface-mould-applicator-high-dose-rate-brachytherapy)
 
+![](Doc/ExampleOutput.png)
+
 ## Research goals
 
 The use of brachytherapy for the treatment of skin cancers is an important alternative to and complement of External Beam Radiotherapy (EBRT), orthovoltage X-rays and chemotherapy. It involves placing a very small radiation source, such as iridium radioisotopes in protective capsules, very close to the area containing the cancer. This greatly reduces the radiation that healthy tissue is exposed to, and allows for very precise and direct treatment of the cancer. HDR brachy is useful for complex geometries where other modalities would be difficult to use, such as nose, scalp, fingers, ankle, ear, orbit. In poorer countries HDR brachy is much more prevalent than alternative treatments. HDR disadvantages are: that it cannot be used on large surfaces (as it leads to large accumulate dose deep in the tissue); dose planning is not as sophisticated as in other modalities; 150-250% doses are commonly occurring in certain locations in the plan (and people who got used to external beam do not like to see such values); fabricating surface mould takes time.
