@@ -8,7 +8,32 @@ Publication: [Mark Schumacher, Andras Lasso, Ian Cumming, Adam Rankin, Conrad B.
 
 ![](Doc/ExampleOutput.png)
 
-## Research goals
+## Tutorial
+
+Prerequisites:
+
+- [Download](https://download.slicer.org) and install 3D Slicer (version 5.0.3 or later)
+- Install SkinMouldGenerator extension
+
+Step-by-step instructions:
+
+1. Create or load skin surface model. To create a model you can follow instructions in [this segmentation recipe](https://lassoan.github.io/SlicerSegmentationRecipes/SkinSurface2/) and then right-click on the segmentation in Data module to export it to a model.
+1. Go to `HDR Mould Generator` module.
+1. Add a markup ROI to designate the boundaries of the mould. Select it as `Mould boundary`.
+1. Specify the surface normal direction of the mould (direction approximately orhotgonal to the skin surface) by a markup line. Select it as `Normal direction`.
+1. Add a markup point list and place as many points on one side of the ROI as many catheter channels are needed. Select it as `Catheter start points`.
+1. Add a markup point list and place as many points on the opposite side of the ROI as many catheter channels are needed. Select it as `Catheter end points`.
+
+![](Doc/MouldInputs.png)
+
+1. Click `Generate Mould`. Computation may take 1-2 minutes.
+1. If catheter paths do not follow the skin surface well enough then tune `Distance from skin` or `Catheter curvature` parameters and regenerate the mould.
+
+![](Doc/MouldResult.png)
+
+## Project notes
+
+### Research goals
 
 The use of brachytherapy for the treatment of skin cancers is an important alternative to and complement of External Beam Radiotherapy (EBRT), orthovoltage X-rays and chemotherapy. It involves placing a very small radiation source, such as iridium radioisotopes in protective capsules, very close to the area containing the cancer. This greatly reduces the radiation that healthy tissue is exposed to, and allows for very precise and direct treatment of the cancer. HDR brachy is useful for complex geometries where other modalities would be difficult to use, such as nose, scalp, fingers, ankle, ear, orbit. In poorer countries HDR brachy is much more prevalent than alternative treatments. HDR disadvantages are: that it cannot be used on large surfaces (as it leads to large accumulate dose deep in the tissue); dose planning is not as sophisticated as in other modalities; 150-250% doses are commonly occurring in certain locations in the plan (and people who got used to external beam do not like to see such values); fabricating surface mould takes time.
 
@@ -18,9 +43,9 @@ In contrast, the use of a completely customized applicator for each patient allo
 
 The goal of this project is to create a module in the medical imaging program 3D Slicer that creates such a custom applicator. Using this module a "mask" of the area to be irradiated is created based on a CT scan of the patient. Catheter paths are then carved out of the mask based on optimized radiation treatment paths defined by a medical professional. The resulting mask is then output in a format that can be used by a 3D printer.
 
-## Workflow
+### Workflow
 
-### Current clinical workflow for surface mould treatment
+#### Current clinical workflow for surface mould treatment
 
 - Radiation Oncologist (RO) in consultation with physicist decide if surface mould brachytherapy is most optimal for the patient (or can be treated with electron?)
 - RO marks/outlines the treatment area to be treated on the patient skin
@@ -39,7 +64,7 @@ The goal of this project is to create a module in the medical imaging program 3D
 - Other Plan specific QA and second dose calc check performed
 - Patient treatment executed
 
-### Proposed workflow
+#### Proposed workflow
 
 - CT image is loaded
 - User specifies a region of interest
@@ -51,14 +76,14 @@ The goal of this project is to create a module in the medical imaging program 3D
 - Catheters are inserted and fixed into the guide block
 - Continue the same way as the current workflow
 
-### Risks
+#### Risks
 
 - The guide block may be displaced on the mask (especially if the surface is quite flat). Potential solution: put metallic posts on the mask (they can also be used as fiducials), print the negative of the posts in the guide block and use it for alignment.
 - The catheters may be accidentally pulled back from the channel. Potential solution: have a hole at the end of each channel where a button can be inserted where the catheter tip snaps into. We could just have an opening to expose the catheter tip and put some glue on it but then catheter may not be reusable (as it cannot be removed). Using gel or glue gun may be gentle enough so that the catheter can be removed without damaging the catheter.
 - Printing of the channel: the filling material might be difficult to remove from the channel (a solid block is printed, the holes contain water-soluble material that should be removed after printing), if the clearance between the catheter and channel wall is too small then the catheter may stuck, if clearance is too big then it may move. Need to experiment with this. The channel may be partially open or have openings to make it easier to remove the filling material, etc.
 - Insertion of the catheters may be difficult due to high curvature. Proposed solution: the software should optimize/minimize the curvature, give warning if exceeded a predefined threshold.
 
-## Requirements
+### Requirements
 
 - Auto-generate fiducials at equal distance between a start and end line
 - Add possibility to define simple breathing holes

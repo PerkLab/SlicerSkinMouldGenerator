@@ -1,6 +1,6 @@
 from __main__ import vtk
 from __main__ import slicer
-import numpy 
+import numpy
 import math
 
 class Util_HDR:
@@ -13,12 +13,12 @@ class Util_HDR:
     for i in range(6):
       imagePadFilter= vtk.vtkImageConstantPad()
       extent        = imageData.GetExtent()
-      print extent
+      print(extent)
       if (i % 2 == 0):
         extent = self.addToExtent(extent,i,-shiftAmount)
       else:
         extent = self.addToExtent(extent,i,+shiftAmount)
-      print extent
+      print(extent)
       imagePadFilter.SetInputData(imageData)
       imagePadFilter.SetOutputWholeExtent(extent[0],extent[1],extent[2],extent[3],extent[4],extent[5])
       imagePadFilter.Update()
@@ -26,7 +26,7 @@ class Util_HDR:
         extent = self.addToExtent(extent,i+1,-shiftAmount)
       else:
         extent = self.addToExtent(extent,i-1,+shiftAmount)
-      print extent
+      print(extent)
       extractVOI    = vtk.vtkExtractVOI()
       extractVOI.SetInputConnection(imagePadFilter.GetOutputPort())
       extractVOI.SetVOI(extent[0],extent[1],extent[2],extent[3],extent[4],extent[5])
@@ -37,7 +37,7 @@ class Util_HDR:
       else:
         extent = self.addToExtent(extent,i,-shiftAmount)
         extent = self.addToExtent(extent,i-1,-shiftAmount)
-      print extent
+      print(extent)
       extractVOI.GetOutput().SetExtent(extent[0],extent[1],extent[2],extent[3],extent[4],extent[5])
       temp = extractVOI.GetOutput()
       prev= self.ImageOR(temp, prev)
@@ -50,8 +50,8 @@ class Util_HDR:
     extent = (temp[0],temp[1],temp[2],temp[3],temp[4],temp[5])
     return extent
   def DilateImageData(self, imageData, numberOfDilations,dilateValue=0,errodeValue=255):
-    """ 
-    VERY EXPENSIVE, will dilate the current binary volume a number of times 
+    """
+    VERY EXPENSIVE, will dilate the current binary volume a number of times
     anything over 10 dilations will take hours on a high voxel density volume
     This will dilate the 0(BYDEFAULT) value voxels and errode the 255(BYDEFAULT) value voxels
     x number of times, we assume uniform dilations in x,y,z.
@@ -71,68 +71,68 @@ class Util_HDR:
   def ImageNegation(self,imageData,referenceVolume):
     """ This function negates the image
     PARAM: imageData1 vtkImageData()
-    PARAM: vtkMRMLScalarVolumeNode() referenceVolume 
+    PARAM: vtkMRMLScalarVolumeNode() referenceVolume
     RETURN: vtkImageData()
     ASK ANDRAS IS THERE IS A BETTERWAY TO FLIP THE BINARY BITS
     """
     air             =   self.PolyDataToImageData(vtk.vtkPolyData(),referenceVolume,0,255)
     imageLogic= vtk.vtkImageLogic()
     imageLogic.SetOperationToXor()
-    imageLogic.SetInput1Data(imageData) 
+    imageLogic.SetInput1Data(imageData)
     imageLogic.SetInput2Data(air)
     imageLogic.Update()
     return imageLogic.GetOutput()
   def ImageAND(self,imageData1,imageData2):
-    """ This function ANDs two image datas 
+    """ This function ANDs two image datas
     PARAM: imageData1 vtkImageData()
     PARAM: imageData2 vtkImageData()
     RETURN: vtkImageData()
     """
     imageLogic= vtk.vtkImageLogic()
     imageLogic.SetOperationToAnd()
-    imageLogic.SetInput1Data(imageData1) 
+    imageLogic.SetInput1Data(imageData1)
     imageLogic.SetInput2Data(imageData2)
     imageLogic.Update()
     return imageLogic.GetOutput()
   def ImageOR(self,imageData1,imageData2):
-    """ This function ORs two image datas 
+    """ This function ORs two image datas
     PARAM: imageData1 vtkImageData()
     PARAM: imageData2 vtkImageData()
     RETURN: vtkImageData()
     """
     imageLogic= vtk.vtkImageLogic()
     imageLogic.SetOperationToOr()
-    imageLogic.SetInput1Data(imageData1) 
+    imageLogic.SetInput1Data(imageData1)
     imageLogic.SetInput2Data(imageData2)
     imageLogic.Update()
     return imageLogic.GetOutput()
   def ImageXOR(self, imageData1, imageData2):
-    """ This function XORs two image datas 
+    """ This function XORs two image datas
     PARAM: imageData1 vtkImageData()
     PARAM: imageData2 vtkImageData()
     RETURN: vtkImageData()
     """
     imageLogic= vtk.vtkImageLogic()
     imageLogic.SetOperationToXor()
-    imageLogic.SetInput1Data(imageData1) 
+    imageLogic.SetInput1Data(imageData1)
     imageLogic.SetInput2Data(imageData2)
     imageLogic.Update()
     return imageLogic.GetOutput()
   def MergeAllImages(self, arrayOfImageData):
-    """ This function will append all images by -or- operations from an 
+    """ This function will append all images by -or- operations from an
     array of image data to create a single imaga data will all datas merged
-    
-    PARAM: Array of image data          Array< ImageData > 
+
+    PARAM: Array of image data          Array< ImageData >
     RETURN : vtkImageData
     """
     if (len(arrayOfImageData)==0):
-      print "Warning: Empty array of Image Data"
+      print("Warning: Empty array of Image Data")
       return None
     imageLogic= vtk.vtkImageLogic()
     imageLogic.SetOperationToOr()
     accumulator = arrayOfImageData.pop()   # Initialize the addition sequence
     while (0 < len(arrayOfImageData)): #Appends all previous images
-      imageLogic.SetInput1Data(accumulator) 
+      imageLogic.SetInput1Data(accumulator)
       imageLogic.SetInput2Data(arrayOfImageData.pop()) #Appends Next tube
       imageLogic.Update()
       accumulator=(imageLogic.GetOutput())
@@ -142,7 +142,7 @@ class Util_HDR:
     PARAM : roi and spacing we wish to have
     RETURN : vtkMRMLScalarVolumeNode()
     """
-    
+
     roiCenter = [0, 0, 0]
     roiNode.GetXYZ( roiCenter )
     roiRadius = [0, 0, 0]
@@ -165,7 +165,7 @@ class Util_HDR:
       outputImageData.AllocateScalars()
     else:
       outputImageData.AllocateScalars(vtk.VTK_UNSIGNED_CHAR, 1)
-      
+
     outputVolumeNode = slicer.vtkMRMLScalarVolumeNode()
     outputVolumeNode.SetAndObserveImageData(outputImageData)
     outputVolumeNode.SetIJKToRASDirections( roiToRas.GetElement(0,0), roiToRas.GetElement(0,1), roiToRas.GetElement(0,2), roiToRas.GetElement(1,0), roiToRas.GetElement(1,1), roiToRas.GetElement(1,2), roiToRas.GetElement(2,0), roiToRas.GetElement(2,1), roiToRas.GetElement(2,2))
@@ -176,12 +176,12 @@ class Util_HDR:
   def PolyDataToImageData(self, inputPolydata_Ras, referenceVolumeNode_Ras, inVal=100, outVal=0):
     """ We take in an polydata and convert it to an new image data , withing the Reference Voulume node
         the reference volume node is cleared with a threshold because originally the volume may contain
-        alot of noisy pixels 
+        alot of noisy pixels
         PARAM: inputPolydata_Ras: Polydata we are looking to conver       vtkPolydata()
         PARAM: refernceVolumeNode_Ras                                     vtkMRMLScalarVolumeNode()
         RETURN : vtkImageData
         """
-    
+
     """ Transform the polydata from ras to ijk using the referenceVolumeNode """
     #inputPolydataTriangulated_Ijk=polyToImage.GetOutput()
     transformPolydataFilter=vtk.vtkTransformPolyDataFilter()
@@ -202,10 +202,10 @@ class Util_HDR:
     stripper.SetInputConnection(trigFilter.GetOutputPort())
     stripper.Update()
     inputPolydataTriangulated_Ijk=stripper.GetOutput()
-    
+
     # Clone reference image and clear it
     referenceImage_Ijk = referenceVolumeNode_Ras.GetImageData()
-    
+
     # Fill image with outVal (there is no volume Fill filter in VTK, therefore we need to use threshold filter)
     thresh = vtk.vtkImageThreshold()
     thresh.ReplaceInOn()
@@ -225,7 +225,7 @@ class Util_HDR:
     polyToImage.SetOutputWholeExtent(whiteImage_Ijk.GetExtent())
     polyToImage.Update()
     imageStencil_Ijk=polyToImage.GetOutput()
-    
+
     # Convert stencil to image
     imgstenc = vtk.vtkImageStencil()
     imgstenc.SetInputData(whiteImage_Ijk)
@@ -235,7 +235,7 @@ class Util_HDR:
     imgstenc.Update()
     return imgstenc.GetOutput()
   def DisplayVolumeNode(self, volumeNode, name="Volume"):
-    existingVolumeNode=slicer.util.getNode(name)
+    existingVolumeNode = slicer.mrmlScene.GetFirstNodeByName(name)
     if not existingVolumeNode:
       displayNode=slicer.vtkMRMLScalarVolumeDisplayNode()
       displayNode.SetAndObserveColorNodeID("vtkMRMLColorTableNodeGrey")
@@ -248,37 +248,42 @@ class Util_HDR:
       existingVolumeNode.SetIJKToRAS(volumeNode.GetIJKToRAS())
     return
 
-  def DisplayImageData(self, imageData_Ijk, referenceVolumeNode_Ras, name="ImageNode"):
-    volumeNode_Ras=slicer.util.getNode(name)
+  def DisplayImageData(self, imageData_Ijk, referenceVolumeNode_Ras, name="ImageNode", labelmap=True):
+    volumeNode_Ras = slicer.mrmlScene.GetFirstNodeByName(name)
     if (not volumeNode_Ras):
-      displayNode=slicer.vtkMRMLScalarVolumeDisplayNode()
-      displayNode.SetAndObserveColorNodeID("vtkMRMLColorTableNodeGrey")
-      volumeNode_Ras=slicer.vtkMRMLScalarVolumeNode()
-      volumeNode_Ras.SetName(name)
-      slicer.mrmlScene.AddNode(volumeNode_Ras)
-      slicer.mrmlScene.AddNode(displayNode)
-      volumeNode_Ras.SetAndObserveDisplayNodeID(displayNode.GetID())
+      if labelmap:
+        volumeNode_Ras = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLLabelMapVolumeNode")
+        volumeNode_Ras.SetName(name)
+      else:
+        displayNode=slicer.vtkMRMLScalarVolumeDisplayNode()
+        displayNode.SetAndObserveColorNodeID("vtkMRMLColorTableNodeGrey")
+        volumeNode_Ras=slicer.vtkMRMLScalarVolumeNode()
+        volumeNode_Ras.SetName(name)
+        slicer.mrmlScene.AddNode(volumeNode_Ras)
+        slicer.mrmlScene.AddNode(displayNode)
+        volumeNode_Ras.SetAndObserveDisplayNodeID(displayNode.GetID())
     volumeNode_Ras.SetAndObserveImageData(imageData_Ijk)
     rasToIjkMatrix=vtk.vtkMatrix4x4()
     referenceVolumeNode_Ras.GetRASToIJKMatrix(rasToIjkMatrix)
     volumeNode_Ras.SetRASToIJKMatrix(rasToIjkMatrix)
     return volumeNode_Ras
+
   def GetMidPoint(self,p1,p2):
-    """ Gets the midpoint between two points in space 
+    """ Gets the midpoint between two points in space
     """
     a,b,c=p1
     d,e,f=p2
     return ((a+d)/2,(b+e)/2,(c+f)/2)
   def PointsToPolyData(self,listOfPoints):
     """ Converts 3D list of points of an array into a polyData line
-    The connections between this line are simply the order in which 
+    The connections between this line are simply the order in which
     they are provided
     """
     points=vtk.vtkPoints()
     idlist = vtk.vtkIdList()
     numOfPoints=len(listOfPoints)
     if numOfPoints==0:
-      print ("WARNING:No points to convert to polyData")
+      print("WARNING:No points to convert to polyData")
       return vtk.vtkPolyData() #returning Blank PolyData
     points.SetNumberOfPoints(numOfPoints)
     for i in range (numOfPoints):
@@ -315,6 +320,18 @@ class Util_HDR:
     w.SetFileTypeToASCII()
     w.SetFileName(path)
     w.Write()
+
+  # def PolyDataToScene(self, polyData, nodeName):
+  #   """ Displays polydata as model in the scene.
+  #   If node exists by that name then it gets overwritten.
+  #   """
+  #   node = slicer.mrmlScene.GetFirstNodeByName(nodeName)
+  #   if node:
+  #     node.SetAndObservePolyData(polyData)
+  #   else:
+  #     node = slicer.modules.models.logic().AddModel(polyData)
+  #     node.SetName(nodeName)
+
   def PolyDataToList(self,polyData):
     """ This won't work for all polyData
     """
@@ -323,7 +340,7 @@ class Util_HDR:
     listOfPoints=[]
     for i in range(numOfPoints):
       listOfPoints.append(points.GetPoint(i))
-    return listOfPoints  
+    return listOfPoints
   def DotProduct(self, v1, v2):
     v1a,v1b,v1c =v1[0],v1[1],v1[2]
     v2a,v2b,v2c =v2[0],v2[1],v2[2]
@@ -346,8 +363,8 @@ class Util_HDR:
     """
     position1=[0,0,0]
     position2=[0,0,0]
-    ruler.GetPosition1(position1)
-    ruler.GetPosition2(position2)
+    ruler.GetNthControlPointPosition(0, position1)
+    ruler.GetNthControlPointPosition(1, position2)
     return self.GetVector(position1, position2)
   def GetVector(self,point1,point2):
     """ Returns a vector given two points
@@ -404,7 +421,7 @@ class Util_HDR:
     n.SetAndObservePolyData(polyData)
     return outputMouldModelDisplayNode
   def TurnOffDisplay(self,name):
-    """ will turn off whatever node name given from the display 
+    """ will turn off whatever node name given from the display
     """
     x=slicer.mrmlScene.GetNodesByName(name)
     y=x.GetItemAsObject(0)
@@ -414,7 +431,7 @@ class Util_HDR:
     z.SetVisibility(0)
   def DisplayImplicit(self,name,implicitFunction, ROI=None, Extents=None):
     """This function takes an implicitFunction and displays it within the ROI
-    It will return the modelDisplaynode assosiated with in so that attributes 
+    It will return the modelDisplaynode assosiated with in so that attributes
     can be changed
     """
     sampleFunction=vtk.vtkSampleFunction()
@@ -435,7 +452,7 @@ class Util_HDR:
     modelDisplayNode=self.DisplayPolyData(name,polyData)
     return modelDisplayNode
   def ExpandExtents(self,ROIExtents, value):
-    """ This Expands the ROIExtents which define a box, so it makes 
+    """ This Expands the ROIExtents which define a box, so it makes
     the area larger by the passed in value
     """
     newROI=[0,0,0,0,0,0]
@@ -464,7 +481,7 @@ class Util_HDR:
     ROIExtents[5] = ROICenterPoint[2] + ROIRadii[2]
     return ROIExtents
   def GetROIPoints(self,ROI):
-    """ RAS 
+    """ RAS
     L->R  Index [0],[1]
     P->A  Index[2],[3]
     I->S  Index[4],[5]
@@ -483,13 +500,13 @@ class Util_HDR:
     return ROIPoints
   def GetClosestExtent(self,ruler,ROI):
     """ Returns the index of the closest ROI Extent to the second point
-    on the ruler. 
-    Asserted that the second point of the ruler is closest to the front 
+    on the ruler.
+    Asserted that the second point of the ruler is closest to the front
     extent of the ROI box.
     """
     roiPoints=self.GetROIPoints(ROI)
     position2=[0,0,0]
-    ruler.GetPosition2(position2) #Back end of the ruler
+    ruler.GetNthControlPointPosition(1, position2) #Back end of the ruler
     rulerPt=numpy.array(position2)
     closestIndex=0
     for i in range (1,6):
@@ -503,21 +520,21 @@ class Util_HDR:
     """ A pretty simple function that I only created to improve readibility
     This will just get the ROI extent's opposite point
     In the RAS coordinate System
-    RAS 
+    RAS
     L->R  Index [0],[1]
     P->A  Index[2],[3]
     I->S  Index[4],[5]
-    
+
     """
     if RoiIndex%2==0: # Even
       return RoiIndex+1
-    else: 
+    else:
       return RoiIndex-1
   def SortPointsInPlane(self, listOfPoints, vectorPlane):
-    """ Sorts points in order based on their distance along the plane in the 
+    """ Sorts points in order based on their distance along the plane in the
     VectorPlane Direction
     """
-    if listOfPoints == []: 
+    if listOfPoints == []:
       return []
     else:
       pivot= listOfPoints[0]
@@ -529,5 +546,3 @@ class Util_HDR:
                                  self.utility.DotProduct(x, self.catheterVector) >=
                                   pivotValue], self.catheterVector)
     return lesser + [pivot] + greater
-    
-    

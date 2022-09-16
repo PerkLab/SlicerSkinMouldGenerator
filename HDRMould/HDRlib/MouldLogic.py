@@ -1,4 +1,4 @@
-from Utility import *
+from .Utility import *
 from __main__ import vtk
 
 
@@ -10,7 +10,7 @@ class MouldLogic:
     self.DEBUG_CONNECTIVITYFACE = DEBUGCONNECTIVEFACE
     self.DEBUG_SLITPLANES = DEBUGSLITPLANES
     self.count=0 #used for creating unique names in debug
-    self.numberOfPaths=numberOfPaths.currentNode().GetNumberOfFiducials() 
+    self.numberOfPaths=numberOfPaths.currentNode().GetNumberOfFiducials()
     self.utility=Util_HDR() #utility Object with common methods
     self.skinSurface=None # Set after ClipData()
     self.minimumDistanceMask= None # Set after MinimumDistanceMask()
@@ -21,10 +21,10 @@ class MouldLogic:
     self.listOfNormals=[]
     self.slitPlanes=[]
     self.tubes=[]
-    self.channels= [] #The Channels are the plastic surronding the empty tubes 
+    self.channels= [] #The Channels are the plastic surronding the empty tubes
   def ClipData(self, ROI , noisySurfacePolyData):
     """ Returns the clipped polydata from the region defined by the ROI
-    Turn on the Debug to make the clipped object appear, 
+    Turn on the Debug to make the clipped object appear,
     For specific filter functionality see DataFlow doc: ClipData.pdf
     """
     connectivityFilter = vtk.vtkPolyDataConnectivityFilter()
@@ -43,7 +43,7 @@ class MouldLogic:
     #See vtkImplicitModdeler limitations.pdf for explanation
     implicitBoxRegion = vtk.vtkBox()
     implicitBoxRegion.SetBounds(BiggerROI)
-    
+
     clipper=vtk.vtkClipPolyData()
     clipper.InsideOutOn() # Clip the regions outside of implicit function
     clipper.SetInputConnection(connectivityFilter.GetOutputPort())
@@ -55,7 +55,7 @@ class MouldLogic:
     """ Gets the inputs ready for input into createPlane()
     this function will return back multiple implicit planes in one list
     """
-    rulerDirection=self.utility.GetRulerVector(ruler) 
+    rulerDirection=self.utility.GetRulerVector(ruler)
     for i in range(len(startPoints)):   #create num of planes for each pair
       startPoint = startPoints[i]
       endPoint = endPoints[i]
@@ -77,8 +77,8 @@ class MouldLogic:
   def DisplayPlanes(self,listOfPlanes,ROI):
     """ This function is preparation before sending into the more
     general function DisplayImplicit()
-    Note, any changing of the color of display of the planes is 
-    done so here. 
+    Note, any changing of the color of display of the planes is
+    done so here.
     """
     for index in range(len(listOfPlanes)):
       name="Plane-"+str(self.count) #To Create Unique Name Required
@@ -86,19 +86,19 @@ class MouldLogic:
       node=self.utility.DisplayImplicit(name, listOfPlanes[index],ROI)
       node.SetColor(1,0,0) #Red ...Max 1 for each column
       node.SetOpacity(0.4)
-      
+
 
   def MinimumDistanceMask(self, vtkAlgorythmObject, distanceFromMask, ROI, ruler , isBubble = False):
-    """ Takes an algorythm object which is will send through a pipeline to 
+    """ Takes an algorythm object which is will send through a pipeline to
     create a mask defining the minimum distance value from the skin surface
     returns an algorythm object as well to preform GetOutput() -> polydata
     or GetOutputPort() -> algorythm
-    see MinimumDistanceMask.pdf 
+    see MinimumDistanceMask.pdf
     """
     if distanceFromMask<2:
-      print "WARNING: MouldLogic: MinimumDistanceMask implicit",
-      "modeling is very unstable below 1.5 , mask may degrade",
-      "and lines will become discontinuous."
+      print("WARNING: MouldLogic: MinimumDistanceMask implicit"
+        "modeling is very unstable below 1.5 , mask may degrade"
+        "and lines will become discontinuous.")
     Extents=self.utility.GetROIExtents(ROI)
     if (isBubble):
       Extents=self.utility.ExpandExtents(Extents, 100)
@@ -111,17 +111,17 @@ class MouldLogic:
     implicitModeller.CappingOff()# Important to create disjoint inner and outer masks
     implicitModeller.SetProcessModeToPerVoxel()
     implicitModeller.Update()
-    
+
     contourFilter = vtk.vtkContourFilter()
     contourFilter.SetValue(0, distanceFromMask)
     contourFilter.SetInputConnection(implicitModeller.GetOutputPort())
-    contourFilter.Update()  
-    
+    contourFilter.Update()
+
     normalsFunction = vtk.vtkPolyDataNormals()
     normalsFunction.FlipNormalsOn ()
     normalsFunction.AddInputConnection(contourFilter.GetOutputPort())
     normalsFunction.Update()
-    
+
     implicitBoxRegion = vtk.vtkBox()
     implicitBoxRegion.SetBounds(Extents)
     clipper2=vtk.vtkClipPolyData()
@@ -129,29 +129,29 @@ class MouldLogic:
     clipper2.SetInputConnection(normalsFunction.GetOutputPort())
     clipper2.SetClipFunction(implicitBoxRegion)
     clipper2.Update()
-    
+
     closestPoint=[0,0,0]
-    ruler.GetPosition1(closestPoint)
+    ruler.GetNthControlPointPosition(0, closestPoint)
     connectivityFilter = vtk.vtkPolyDataConnectivityFilter()
     connectivityFilter.SetInputConnection(clipper2.GetOutputPort())
     connectivityFilter.SetExtractionModeToClosestPointRegion()
     connectivityFilter.SetClosestPoint(closestPoint)
     connectivityFilter.Update()
-    
+
     return connectivityFilter.GetOutput()
   def CreateBackLine(self,ruler,ROI,implicitPlane):
     """ Creates the polydata for where the cutting plane hits the the back
-    of the ROI.  
+    of the ROI.
     This backline will be used to close the catheter path allowing for the
     specification of Towards or Away from the face
-    
-    ASSERTION: that the ruler's second point will be closest to the 
-    front of our mask. 
+
+    ASSERTION: that the ruler's second point will be closest to the
+    front of our mask.
     """
     roiPoints=self.utility.GetROIPoints(ROI)
     frontExtentIndex=self.utility.GetClosestExtent(ruler,ROI)
     backExtentIndex=self.utility.GetOppositeExtent(frontExtentIndex)
-    
+
     #Creating an implict plane for the back of the ROI
     ROICenterPoint = [0,0,0]
     ROI.GetXYZ(ROICenterPoint)
@@ -159,7 +159,7 @@ class MouldLogic:
     backPlane= vtk.vtkPlane()
     backPlane.SetNormal(backNormal)
     backPlane.SetOrigin(roiPoints[backExtentIndex])
-    
+
     #Finding the Intercept of this and the CuttingPlane
     sampleFunction=vtk.vtkSampleFunction()
     sampleFunction.SetSampleDimensions(10,10,10)
@@ -167,12 +167,12 @@ class MouldLogic:
     bounds=self.utility.ExpandExtents(self.utility.GetROIExtents(ROI),1)
     sampleFunction.SetModelBounds(bounds)
     sampleFunction.Update()
-    
+
     contourFilter=vtk.vtkContourFilter()
     contourFilter.SetInputConnection(sampleFunction.GetOutputPort())
     contourFilter.GenerateValues(1,1,1)
     contourFilter.Update()
-    
+
     cutter=vtk.vtkCutter()
     cutter.SetInputConnection(contourFilter.GetOutputPort())
     cutter.SetCutFunction(implicitPlane)
@@ -198,7 +198,7 @@ class MouldLogic:
     normalsFunction = vtk.vtkPolyDataNormals()
     normalsFunction.AutoOrientNormalsOn()
     normalsFunction.AddInputConnection(contourFilter.GetOutputPort())
-    
+
     unionFilter = vtk.vtkBooleanOperationPolyDataFilter()
     unionFilter.SetOperationToUnion()
     unionFilter.SetInput(0, normalsFunction.GetOutput())
@@ -216,12 +216,12 @@ class MouldLogic:
     #TODO Find out the the allowed thinkness of the plastic
     THICKNESS=3
     outerMaskContourFunction.SetValue(0, THICKNESS)
-    outerMaskContourFunction.SetInputConnection(outerFaceImplicitFunction.GetOutputPort())  
-    
+    outerMaskContourFunction.SetInputConnection(outerFaceImplicitFunction.GetOutputPort())
+
     outerFaceNormalsFunction = vtk.vtkPolyDataNormals()
     outerFaceNormalsFunction.AutoOrientNormalsOn()
     outerFaceNormalsFunction.AddInputConnection(outerMaskContourFunction.GetOutputPort())
-    # Subtract the Tubes from the mask 
+    # Subtract the Tubes from the mask
     subtractionFilter1 = vtk.vtkBooleanOperationPolyDataFilter()
     subtractionFilter1.SetOperationToDifference()
     subtractionFilter1.SetInputConnection(0, outerFaceNormalsFunction.GetOutputPort())
@@ -236,11 +236,11 @@ class MouldLogic:
     x.SetOpacity(1)
   def CreateSlit(self,normal,pathPolydata,ruler,ROI,slitSize):
     """ Here we are going to create a boxSource , the size of the 2*ROI in the X,Y
-    and the size of the slit Size in the Z. 
+    and the size of the slit Size in the Z.
     We are then going to translate the box source to its correct location in slicer
     As always to visualize , a DEBUG option can be set at the top.
     x is L->R, y is P->A, z is I->S
-    """ 
+    """
     #Cube Creation
     roiPoints=self.utility.GetROIPoints(ROI)
     frontExtentIndex=self.utility.GetClosestExtent(ruler,ROI)
@@ -255,7 +255,7 @@ class MouldLogic:
     zDist=slitSize #Rewording the parameter to make it easier to understand
     slitCube=vtk.vtkCubeSource()
     slitCube.SetBounds(0,xDist,-yDist,yDist,-zDist/2,zDist/2)# (Xmin, Xmax, Ymin, Ymax,Zmin, Zmax)
-    
+
     #Transforming Cube
     transformFilter=vtk.vtkTransformFilter()
     transform=vtk.vtkTransform()
@@ -265,22 +265,22 @@ class MouldLogic:
     xVector=pointA-pointB
     xDist = numpy.linalg.norm(pointA-pointB)
     xUnitVector=(xVector[0]/xDist,xVector[1]/xDist,xVector[2]/xDist)
-    
+
     yVector=self.utility.GetRulerVector(ruler)
     yDist=numpy.linalg.norm(yVector)
     yUnitVector=(yVector[0]/yDist,yVector[1]/yDist,yVector[2]/yDist)
-    
+
     zVector=numpy.cross(xVector,yVector)
     zDist=numpy.linalg.norm(zVector)
     zUnitVector= (zVector[0]/zDist,zVector[1]/zDist,zVector[2]/zDist)
-    
+
     origin=pointA=numpy.array(pathPolydata.GetPoint(numPoints-1))
-    
+
     matrix.DeepCopy((xUnitVector[0], yUnitVector[0], zUnitVector[0], origin[0],
                      xUnitVector[1], yUnitVector[1], zUnitVector[1], origin[1],
                      xUnitVector[2], yUnitVector[2], zUnitVector[2], origin[2],
                      0, 0, 0, 1))
-    
+
     transform.SetMatrix(matrix)
     transformFilter.SetTransform(transform)
     transformFilter.SetInputConnection(slitCube.GetOutputPort())
