@@ -4,7 +4,7 @@ project(SkinMouldGenerator)
 
 #-----------------------------------------------------------------------------
 # Extension meta-information
-set(EXTENSION_HOMEPAGE "https://www.slicer.org/wiki/Documentation/Nightly/Extensions/SkinMouldGenerator")
+set(EXTENSION_HOMEPAGE "https://github.com/PerkLab/SlicerSkinMouldGenerator#readme")
 set(EXTENSION_CATEGORY "Radiotherapy")
 set(EXTENSION_CONTRIBUTORS "Mark Schumacher (PerkLab, Queen's University), Jacob Andreou (PerkLab, Queen's University), Ian Cumming (PerkLab, Queen's University), Andras Lasso (PerkLab, Queen's University)")
 set(EXTENSION_DESCRIPTION "3D Slicer extension for generating 3D-printable HDR Brachytherapy applicator for treatment of skin cancer.")
